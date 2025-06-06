@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Webcam Slideshow</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .controls {
+      text-align: center;
+      margin: 20px;
+    }
+
+    .image-crop {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .image-crop img {
+      width: 100%;
+      height: auto;
+      display: block;
+      clip-path: inset(0 0 11% 0); /* top right bottom left */
+    }
+
+    .back-button {
+      margin-left: 35%;
+      padding: 8px 16px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: none;
+      background-color: #007AFF;
+      color: white;
+      cursor: pointer;
+      width: 30%;
+      align: center;
+    }
+
+    .back-button:hover {
+      background-color: #005FCC;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Webcam Slideshow</h1>
+
+  <div class="image-crop">
+    <img id="slideshow" src="" alt="Slideshow image">
+  </div>
+
+  <div class="controls">
+    <label for="speedSlider">Speed (ms): </label>
+    <input type="range" id="speedSlider" min="100" max="5000" step="100" value="500">
+    <span id="speedDisplay">500</span> ms
+  </div>
+
+  <p id="timestamp" style="text-align:center; font-size: 1.2em; margin-top: 10px;"></p>
+  <button class="back-button" onclick="window.history.back()">⬅ Back</button>
+
+  <script>
+    const imageFilenames = [];
+
+    const queryString = window.location.search;
+    const params = new URLSearchParams(queryString);
+    const camera = params.get("camera") || "Cloud9";
+
+    document.querySelector("h1").textContent = `${camera} Slideshow`;
+
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < 6; j++) {
+        imageFilenames.push(`${camera}_0${i}${j}0.jpg`);
+      }
+    }
+
+    for (let i = 10; i < 24; i++) {
+      for (let j = 0; j < 6; j++) {
+        imageFilenames.push(`${camera}_${i}${j}0.jpg`);
+      }
+    }
+
+    //const imageFolder = "http://127.0.0.1:5500/Falls%20Creek%20Watch/webcam-capture/webcam-capture/images/2025-06-05/";
+    const imageFolder = https://proteus-mx.github.io/Falls-Creek-Watch/webcam-capture/webcam-capture/images/2025-06-05/";
+    let currentIndex = 0;
+    const imageElement = document.getElementById("slideshow");
+
+    let intervalTime = 500;
+    let intervalId;
+
+    function showNextImage() {
+      const tryNext = () => {
+        if (imageFilenames.length === 0) return;
+
+        const filename = imageFilenames[currentIndex];
+        const fullPath = imageFolder + filename;
+
+        const parts = filename.split("_");
+        if (parts.length > 1) {
+          const timeStr = parts[1].replace(".jpg", "");
+          let hours = parseInt(timeStr.slice(0, 2), 10);
+          let tensOfMinutes = parseInt(timeStr[2], 10);
+          let minutes = tensOfMinutes * 10;
+
+          const timestampText = `Time: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+          document.getElementById("timestamp").textContent = timestampText;
+        }
+
+        const img = new Image();
+        img.onload = function () {
+          imageElement.src = fullPath;
+          currentIndex = (currentIndex + 1) % imageFilenames.length;
+        };
+        img.onerror = function () {
+          currentIndex = (currentIndex + 1) % imageFilenames.length;
+          tryNext(); // Try next image
+        };
+
+        img.src = fullPath;
+      };
+
+      tryNext();
+    }
+
+    function startSlideshow() {
+      clearInterval(intervalId);
+      intervalId = setInterval(showNextImage, intervalTime);
+    }
+
+    const speedSlider = document.getElementById("speedSlider");
+    const speedDisplay = document.getElementById("speedDisplay");
+
+    speedSlider.addEventListener("input", () => {
+      intervalTime = parseInt(speedSlider.value);
+      speedDisplay.textContent = intervalTime;
+      startSlideshow();
+    });
+
+    showNextImage();
+    startSlideshow();
+  </script>
+</body>
+</html>
